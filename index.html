@@ -7,7 +7,109 @@
   <title>FocusMate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .glass-container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 2rem;
+      width: 100%;
+      max-width: 800px;
+      color: #fff;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    header p {
+      text-align: center;
+      margin-bottom: 2rem;
+      opacity: 0.8;
+    }
+
+    .mascot-section {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .mascot-section img {
+      width: 100px;
+      border-radius: 50%;
+    }
+
+    section {
+      margin-bottom: 2rem;
+    }
+
+    input[type="text"] {
+      padding: 0.5rem;
+      width: 70%;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 0.5rem;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      margin-left: 0.5rem;
+      border: none;
+      border-radius: 10px;
+      background: #fff;
+      color: #1f1c2c;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    ul li {
+      padding: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      margin-bottom: 0.5rem;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .timer-section, .streak-section {
+      text-align: center;
+    }
+
+    #timer {
+      font-size: 2rem;
+      margin: 1rem 0;
+    }
+
+    .video-frame iframe {
+      border-radius: 10px;
+    }
+  </style>
 </head>
 
 <body>
@@ -18,7 +120,7 @@
     </header>
 
     <section class="mascot-section">
-      <img id="mascot" src="assets/happy-mascot.png" alt="Mascot">
+      <img id="mascot" src="https://i.ibb.co/2sZphnM/happy-mascot.png" alt="Mascot">
     </section>
 
     <section class="todo-section">
@@ -49,7 +151,102 @@
     </section>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    let streak = parseInt(localStorage.getItem('streak')) || 0;
+    let timer;
+    let timeLeft = 1500;
+    let isRunning = false;
+
+    function renderTasks() {
+      const taskList = document.getElementById('taskList');
+      taskList.innerHTML = '';
+      tasks.forEach((task, i) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          ${task} <button onclick="deleteTask(${i})">❌</button>
+        `;
+        taskList.appendChild(li);
+      });
+    }
+
+    function addTask() {
+      const input = document.getElementById('taskInput');
+      const task = input.value.trim();
+      if (task) {
+        tasks.push(task);
+        input.value = '';
+        updateMascot('productive');
+        saveTasks();
+        renderTasks();
+      }
+    }
+
+    function deleteTask(index) {
+      tasks.splice(index, 1);
+      updateMascot('sad');
+      saveTasks();
+      renderTasks();
+    }
+
+    function saveTasks() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function updateStreak() {
+      streak++;
+      document.getElementById('streak').innerText = streak;
+      localStorage.setItem('streak', streak);
+    }
+
+    function updateMascot(mood) {
+      const mascot = document.getElementById('mascot');
+      if (mood === 'productive') mascot.src = 'https://i.ibb.co/2sZphnM/happy-mascot.png';
+      if (mood === 'sad') mascot.src = 'https://i.ibb.co/ZhDkZp7/sad-mascot.png';
+    }
+
+    function startPomodoro() {
+      if (isRunning) return;
+      isRunning = true;
+      timer = setInterval(() => {
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          isRunning = false;
+          updateStreak();
+          updateMascot('productive');
+          alert('Pomodoro Complete!');
+        } else {
+          timeLeft--;
+          displayTime();
+        }
+      }, 1000);
+    }
+
+    function resetPomodoro() {
+      clearInterval(timer);
+      isRunning = false;
+      timeLeft = 1500;
+      displayTime();
+    }
+
+    function displayTime() {
+      const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+      const seconds = (timeLeft % 60).toString().padStart(2, '0');
+      document.getElementById('timer').innerText = `${minutes}:${seconds}`;
+    }
+
+    function embedVideo() {
+      const input = document.getElementById('ytInput').value;
+      const videoId = input.split('v=')[1]?.split('&')[0];
+      if (videoId) {
+        document.getElementById('ytVideo').src = `https://www.youtube.com/embed/${videoId}`;
+      }
+    }
+
+    document.getElementById('streak').innerText = streak;
+    renderTasks();
+    displayTime();
+  </script>
 </body>
 
 </html>
